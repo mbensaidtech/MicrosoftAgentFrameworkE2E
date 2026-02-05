@@ -1,0 +1,34 @@
+{
+  "version": "1.0",
+  "exportedAt": "2024-12-19T00:00:00.000Z",
+  "profile": {
+    "id": "policy-agent-profile",
+    "name": "Policy Agent Profile",
+    "description": "Profile containing the Policy Agent configuration for agent-dev-tool-backend",
+    "color": "#0071e3",
+    "createdAt": "2024-12-19T00:00:00.000Z",
+    "updatedAt": "2024-12-19T00:00:00.000Z",
+    "backendUrl": "http://localhost:5017",
+    "defaultProtocol": "rest",
+    "agents": [
+      {
+        "id": "policy",
+        "name": "Policy Agent",
+        "description": "Expert des politiques de l'entreprise : retours, remboursements, et annulations de commande.",
+        "enabled": true,
+        "supportsStreaming": true,
+        "conversational": true,
+        "restPath": "/api/agents/policy",
+        "a2aPath": "/a2a/policyAgent",
+        "backendUrl": "http://localhost:5017",
+        "presetQuestions": [
+          "Comment faire pour retourner un produit ?",
+          "Quel est le délai de remboursement ?",
+          "Puis-je annuler ma commande ?",
+          "Quelle est votre politique de retour ?"
+        ]
+      }
+    ]
+  }
+}
+

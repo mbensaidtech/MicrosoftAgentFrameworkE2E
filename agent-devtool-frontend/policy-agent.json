@@ -1,0 +1,20 @@
+[
+  {
+    "id": "policy",
+    "name": "Policy Agent",
+    "description": "Expert des politiques de l'entreprise : retours, remboursements, et annulations de commande.",
+    "enabled": true,
+    "supportsStreaming": true,
+    "conversational": true,
+    "restPath": "/api/agents/policy",
+    "a2aPath": "/a2a/policyAgent",
+    "backendUrl": "http://localhost:5017",
+    "presetQuestions": [
+      "Comment faire pour retourner un produit ?",
+      "Quel est le délai de remboursement ?",
+      "Puis-je annuler ma commande ?",
+      "Quelle est votre politique de retour ?"
+    ]
+  }
+]
+

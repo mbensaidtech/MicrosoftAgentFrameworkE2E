@@ -1,0 +1,467 @@
+{
+  "info": {
+    "name": "Agent Dev Tool Backend - Policy Agent",
+    "description": "Test Policy Agent via A2A protocol and HTTP REST API.\n\nIncludes:\n- A2A Protocol (JSON-RPC and SSE Streaming)\n- HTTP REST (Non-streaming)\n- HTTP REST (SSE Streaming)\n\nPolicy Agent handles:\n- Return policies\n- Refund policies\n- Order cancellation policies",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5017",
+      "type": "string"
+    },
+    {
+      "key": "a2aConversationId",
+      "value": "policy-a2a-conversation",
+      "type": "string"
+    },
+    {
+      "key": "httpConversationId",
+      "value": "policy-http-conversation",
+      "type": "string"
+    },
+    {
+      "key": "streamConversationId",
+      "value": "policy-stream-conversation",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Agent Discovery",
+      "item": [
+        {
+          "name": "Get Policy Agent Card (A2A)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/a2a/policyAgent/.well-known/agent",
+              "host": ["{{baseUrl}}"],
+              "path": ["a2a", "policyAgent", ".well-known", "agent"]
+            },
+            "description": "Get the Policy Agent card via A2A discovery endpoint."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "A2A Protocol - JSON-RPC",
+      "description": "Test Policy Agent via A2A protocol using JSON-RPC format.\n\nTests return, refund, and cancellation policy questions.",
+      "item": [
+        {
+          "name": "1. Return Policy Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"message/send\",\n  \"params\": {\n    \"message\": {\n      \"kind\": \"message\",\n      \"messageId\": \"msg-001\",\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"kind\": \"text\",\n          \"text\": \"Comment faire pour retourner un produit ?\"\n        }\n      ]\n    },\n    \"contextId\": \"{{a2aConversationId}}\"\n  },\n  \"id\": \"req-001\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/a2a/policyAgent",
+              "host": ["{{baseUrl}}"],
+              "path": ["a2a", "policyAgent"]
+            },
+            "description": "First question about return policy.\n\nExpected: Agent should use SearchReturnPolicy tool and provide detailed return information."
+          },
+          "response": []
+        },
+        {
+          "name": "2. Refund Policy Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"message/send\",\n  \"params\": {\n    \"message\": {\n      \"kind\": \"message\",\n      \"messageId\": \"msg-002\",\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"kind\": \"text\",\n          \"text\": \"Quel est le délai de remboursement ?\"\n        }\n      ]\n    },\n    \"contextId\": \"{{a2aConversationId}}\"\n  },\n  \"id\": \"req-002\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/a2a/policyAgent",
+              "host": ["{{baseUrl}}"],
+              "path": ["a2a", "policyAgent"]
+            },
+            "description": "Question about refund timeline.\n\nExpected: Agent should use SearchRefundPolicy tool and provide refund processing time information."
+          },
+          "response": []
+        },
+        {
+          "name": "3. Cancellation Policy Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"message/send\",\n  \"params\": {\n    \"message\": {\n      \"kind\": \"message\",\n      \"messageId\": \"msg-003\",\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"kind\": \"text\",\n          \"text\": \"Puis-je annuler ma commande ?\"\n        }\n      ]\n    },\n    \"contextId\": \"{{a2aConversationId}}\"\n  },\n  \"id\": \"req-003\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/a2a/policyAgent",
+              "host": ["{{baseUrl}}"],
+              "path": ["a2a", "policyAgent"]
+            },
+            "description": "Question about order cancellation.\n\nExpected: Agent should use SearchOrderCancellationPolicy tool and provide cancellation information."
+          },
+          "response": []
+        },
+        {
+          "name": "4. Multiple Policies Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"message/send\",\n  \"params\": {\n    \"message\": {\n      \"kind\": \"message\",\n      \"messageId\": \"msg-004\",\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"kind\": \"text\",\n          \"text\": \"Quelles sont les conditions de retour et de remboursement ?\"\n        }\n      ]\n    },\n    \"contextId\": \"{{a2aConversationId}}\"\n  },\n  \"id\": \"req-004\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/a2a/policyAgent",
+              "host": ["{{baseUrl}}"],
+              "path": ["a2a", "policyAgent"]
+            },
+            "description": "Question about multiple policies.\n\nExpected: Agent should use both SearchReturnPolicy and SearchRefundPolicy tools."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "A2A Protocol - SSE Streaming",
+      "description": "Test Policy Agent via A2A protocol with SSE streaming.\n\nTokens are sent as they are generated.",
+      "item": [
+        {
+          "name": "1. SSE - Return Policy Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "text/event-stream"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": {\n    \"kind\": \"message\",\n    \"role\": \"user\",\n    \"parts\": [\n      {\n        \"kind\": \"text\",\n        \"text\": \"Comment faire pour retourner un produit ?\",\n        \"metadata\": {}\n      }\n    ],\n    \"messageId\": null,\n    \"contextId\": \"{{a2aConversationId}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/a2a/policyAgent/v1/message:stream",
+              "host": ["{{baseUrl}}"],
+              "path": ["a2a", "policyAgent", "v1", "message:stream"]
+            },
+            "description": "A2A SSE streaming - Return policy question.\n\nSSE Events:\n- event: start\n- event: token (multiple)\n- event: end"
+          },
+          "response": []
+        },
+        {
+          "name": "2. SSE - Refund Timeline Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "text/event-stream"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": {\n    \"kind\": \"message\",\n    \"role\": \"user\",\n    \"parts\": [\n      {\n        \"kind\": \"text\",\n        \"text\": \"Quel est le délai de remboursement ?\",\n        \"metadata\": {}\n      }\n    ],\n    \"messageId\": null,\n    \"contextId\": \"{{a2aConversationId}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/a2a/policyAgent/v1/message:stream",
+              "host": ["{{baseUrl}}"],
+              "path": ["a2a", "policyAgent", "v1", "message:stream"]
+            },
+            "description": "A2A SSE streaming - Refund timeline question."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "HTTP REST - Non-Streaming",
+      "description": "Test Policy Agent via HTTP REST API (non-streaming).\n\nSimple JSON format, complete response in one call.",
+      "item": [
+        {
+          "name": "1. Return Policy Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Comment faire pour retourner un produit ?\",\n  \"contextId\": \"{{httpConversationId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/agents/policy/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "agents", "policy", "chat"]
+            },
+            "description": "HTTP REST - Return policy question.\n\nExpected: Complete response with return policy information.\n\nResponse format:\n{\n  \"message\": \"...\",\n  \"contextId\": \"...\",\n  \"agent\": \"PolicyAgent\"\n}"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Refund Policy Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Quel est le délai de remboursement ?\",\n  \"contextId\": \"{{httpConversationId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/agents/policy/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "agents", "policy", "chat"]
+            },
+            "description": "HTTP REST - Refund timeline question.\n\nExpected: Complete response with refund processing time information."
+          },
+          "response": []
+        },
+        {
+          "name": "3. Cancellation Policy Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Puis-je annuler ma commande ?\",\n  \"contextId\": \"{{httpConversationId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/agents/policy/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "agents", "policy", "chat"]
+            },
+            "description": "HTTP REST - Order cancellation question.\n\nExpected: Complete response with cancellation policy information."
+          },
+          "response": []
+        },
+        {
+          "name": "4. Return Eligibility Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Quels produits peuvent être retournés ?\",\n  \"contextId\": \"{{httpConversationId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/agents/policy/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "agents", "policy", "chat"]
+            },
+            "description": "HTTP REST - Return eligibility question.\n\nExpected: Information about which products are eligible for return."
+          },
+          "response": []
+        },
+        {
+          "name": "5. Multiple Policies Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Quelles sont les conditions de retour et de remboursement ?\",\n  \"contextId\": \"{{httpConversationId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/agents/policy/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "agents", "policy", "chat"]
+            },
+            "description": "HTTP REST - Multiple policies question.\n\nExpected: Agent should use both SearchReturnPolicy and SearchRefundPolicy tools."
+          },
+          "response": []
+        },
+        {
+          "name": "TEST - New Conversation (no contextId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Quel est le délai de remboursement ?\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/agents/policy/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "agents", "policy", "chat"]
+            },
+            "description": "Test WITHOUT contextId - starts new conversation.\n\nExpected: Agent generates a new contextId and responds normally."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "HTTP REST - SSE Streaming",
+      "description": "Test Policy Agent via HTTP REST API with SSE streaming.\n\nToken-by-token streaming using Server-Sent Events.\n\nUse curl -N for best streaming visualization.",
+      "item": [
+        {
+          "name": "1. Stream - Return Policy Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "text/event-stream"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Comment faire pour retourner un produit ?\",\n  \"contextId\": \"{{streamConversationId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/agents/policy/stream",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "agents", "policy", "stream"]
+            },
+            "description": "HTTP REST SSE streaming - Return policy question.\n\nSSE Events:\n- event: start - { contextId, agent }\n- event: token - { text } (multiple)\n- event: end - { contextId }\n- event: error - { message } (if error)\n\nCurl command:\ncurl -N -X POST http://localhost:5017/api/agents/policy/stream \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Accept: text/event-stream\" \\\n  -d '{\"message\": \"Comment faire pour retourner un produit ?\", \"contextId\": \"test-stream\"}'"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Stream - Refund Timeline Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "text/event-stream"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Quel est le délai de remboursement ?\",\n  \"contextId\": \"{{streamConversationId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/agents/policy/stream",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "agents", "policy", "stream"]
+            },
+            "description": "HTTP REST SSE streaming - Refund timeline question.\n\nExpected: Tokens streamed as agent generates response with refund policy information."
+          },
+          "response": []
+        },
+        {
+          "name": "3. Stream - Cancellation Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "text/event-stream"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Puis-je annuler ma commande ?\",\n  \"contextId\": \"{{streamConversationId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/agents/policy/stream",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "agents", "policy", "stream"]
+            },
+            "description": "HTTP REST SSE streaming - Cancellation question.\n\nExpected: Tokens streamed with cancellation policy information."
+          },
+          "response": []
+        },
+        {
+          "name": "4. Stream - Detailed Policy Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "text/event-stream"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Quelles sont toutes les conditions pour être remboursé et comment se déroule le processus ?\",\n  \"contextId\": \"{{streamConversationId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/agents/policy/stream",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "agents", "policy", "stream"]
+            },
+            "description": "HTTP REST SSE streaming - Longer detailed question.\n\nGood for testing token-by-token delivery with longer responses.\n\nExpected: Multiple token events with detailed refund policy information."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
+

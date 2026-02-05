@@ -1,0 +1,185 @@
+### Agent Dev Tool Backend - Policy Agent Tests
+### Base URL
+@baseUrl = http://localhost:5017
+@contextId = policy-test-conversation-001
+
+### ============================================
+### Agent Discovery
+### ============================================
+
+### Get Policy Agent Card (A2A)
+GET {{baseUrl}}/a2a/policyAgent/.well-known/agent
+
+### ============================================
+### A2A Protocol - JSON-RPC
+### ============================================
+
+### A2A - Return Policy Question
+POST {{baseUrl}}/a2a/policyAgent
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "message/send",
+  "params": {
+    "message": {
+      "kind": "message",
+      "messageId": "msg-001",
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "text": "Comment faire pour retourner un produit ?"
+        }
+      ]
+    },
+    "contextId": "{{contextId}}"
+  },
+  "id": "req-001"
+}
+
+### A2A - Refund Policy Question
+POST {{baseUrl}}/a2a/policyAgent
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "message/send",
+  "params": {
+    "message": {
+      "kind": "message",
+      "messageId": "msg-002",
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "text": "Quel est le délai de remboursement ?"
+        }
+      ]
+    },
+    "contextId": "{{contextId}}"
+  },
+  "id": "req-002"
+}
+
+### A2A - Cancellation Policy Question
+POST {{baseUrl}}/a2a/policyAgent
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "message/send",
+  "params": {
+    "message": {
+      "kind": "message",
+      "messageId": "msg-003",
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "text": "Puis-je annuler ma commande ?"
+        }
+      ]
+    },
+    "contextId": "{{contextId}}"
+  },
+  "id": "req-003"
+}
+
+### ============================================
+### HTTP REST - Non-Streaming
+### ============================================
+
+### HTTP - Return Policy Question
+POST {{baseUrl}}/api/agents/policy/chat
+Content-Type: application/json
+
+{
+  "message": "Comment faire pour retourner un produit ?",
+  "contextId": "{{contextId}}"
+}
+
+### HTTP - Refund Policy Question
+POST {{baseUrl}}/api/agents/policy/chat
+Content-Type: application/json
+
+{
+  "message": "Quel est le délai de remboursement ?",
+  "contextId": "{{contextId}}"
+}
+
+### HTTP - Cancellation Policy Question
+POST {{baseUrl}}/api/agents/policy/chat
+Content-Type: application/json
+
+{
+  "message": "Puis-je annuler ma commande ?",
+  "contextId": "{{contextId}}"
+}
+
+### HTTP - Return Eligibility Question
+POST {{baseUrl}}/api/agents/policy/chat
+Content-Type: application/json
+
+{
+  "message": "Quels produits peuvent être retournés ?",
+  "contextId": "{{contextId}}"
+}
+
+### HTTP - Multiple Policies Question
+POST {{baseUrl}}/api/agents/policy/chat
+Content-Type: application/json
+
+{
+  "message": "Quelles sont les conditions de retour et de remboursement ?",
+  "contextId": "{{contextId}}"
+}
+
+### HTTP - New Conversation (no contextId)
+POST {{baseUrl}}/api/agents/policy/chat
+Content-Type: application/json
+
+{
+  "message": "Quel est le délai de remboursement ?"
+}
+
+### ============================================
+### HTTP REST - SSE Streaming
+### ============================================
+### Note: SSE streaming requires a client that supports Server-Sent Events
+### Use curl -N for best streaming visualization:
+### curl -N -X POST http://localhost:5017/api/agents/policy/stream \
+###   -H "Content-Type: application/json" \
+###   -H "Accept: text/event-stream" \
+###   -d '{"message": "Comment faire pour retourner un produit ?", "contextId": "test-stream"}'
+
+### HTTP Stream - Return Policy Question
+POST {{baseUrl}}/api/agents/policy/stream
+Content-Type: application/json
+Accept: text/event-stream
+
+{
+  "message": "Comment faire pour retourner un produit ?",
+  "contextId": "{{contextId}}"
+}
+
+### HTTP Stream - Refund Timeline Question
+POST {{baseUrl}}/api/agents/policy/stream
+Content-Type: application/json
+Accept: text/event-stream
+
+{
+  "message": "Quel est le délai de remboursement ?",
+  "contextId": "{{contextId}}"
+}
+
+### HTTP Stream - Detailed Policy Question
+POST {{baseUrl}}/api/agents/policy/stream
+Content-Type: application/json
+Accept: text/event-stream
+
+{
+  "message": "Quelles sont toutes les conditions pour être remboursé et comment se déroule le processus ?",
+  "contextId": "{{contextId}}"
+}
+
