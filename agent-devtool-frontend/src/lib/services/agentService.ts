@@ -21,6 +21,7 @@ export interface StreamingCallbacks {
 
 // Global network request tracker
 let networkRequestCallback: ((request: NetworkRequest) => void) | null = null;
+let requestCounter = 0;
 
 export function setNetworkRequestCallback(callback: (request: NetworkRequest) => void | null) {
   networkRequestCallback = callback;
@@ -34,8 +35,9 @@ function createNetworkRequest(
   protocol: Protocol,
   streaming: boolean
 ): NetworkRequest {
+  requestCounter += 1;
   return {
-    id: `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    id: `req-${Date.now()}-${requestCounter}-${Math.random().toString(36).substr(2, 9)}`,
     timestamp: new Date(),
     method,
     url,
@@ -229,6 +231,7 @@ export async function sendRestStreamingMessage(
   };
   
   const networkRequest = createNetworkRequest('POST', url, headers, requestBody, 'rest', true);
+  // Notify immediately for streaming so user can see the request in real-time
   notifyNetworkRequest(networkRequest);
 
   let response: Response;
@@ -305,8 +308,23 @@ export async function sendRestStreamingMessage(
             if (currentEvent === 'token' && parsed.text) {
               streamedTokens.push(parsed.text);
               callbacks.onToken(parsed.text);
+              // Update network request in real-time during streaming
+              networkRequest.responseBody = {
+                contextId: finalContextId,
+                streamedContent: streamedTokens.join(''),
+                events: streamedEvents,
+                totalTokens: streamedTokens.length,
+              };
+              notifyNetworkRequest(networkRequest);
             } else if (currentEvent === 'start' && parsed.contextId) {
               finalContextId = parsed.contextId;
+              networkRequest.responseBody = {
+                contextId: finalContextId,
+                streamedContent: '',
+                events: streamedEvents,
+                totalTokens: 0,
+              };
+              notifyNetworkRequest(networkRequest);
             } else if (currentEvent === 'end' && parsed.contextId) {
               finalContextId = parsed.contextId;
               networkRequest.duration = Date.now() - startTime;
@@ -593,8 +611,23 @@ export async function sendA2AStreamingMessage(
             if (currentEvent === 'token' && parsed.text) {
               streamedTokens.push(parsed.text);
               callbacks.onToken(parsed.text);
+              // Update network request in real-time during streaming
+              networkRequest.responseBody = {
+                contextId: finalContextId,
+                streamedContent: streamedTokens.join(''),
+                events: streamedEvents,
+                totalTokens: streamedTokens.length,
+              };
+              notifyNetworkRequest(networkRequest);
             } else if (currentEvent === 'start' && parsed.contextId) {
               finalContextId = parsed.contextId;
+              networkRequest.responseBody = {
+                contextId: finalContextId,
+                streamedContent: '',
+                events: streamedEvents,
+                totalTokens: 0,
+              };
+              notifyNetworkRequest(networkRequest);
             } else if (currentEvent === 'end' && parsed.contextId) {
               finalContextId = parsed.contextId;
               networkRequest.duration = Date.now() - startTime;

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '@mui/material/styles';
 import {
   Drawer,
@@ -23,6 +23,8 @@ import {
   ContentCopy as ContentCopyIcon,
   CheckCircle as CheckCircleIcon,
   Error as ErrorIcon,
+  UnfoldMore as UnfoldMoreIcon,
+  UnfoldLess as UnfoldLessIcon,
 } from '@mui/icons-material';
 
 export interface NetworkRequest {
@@ -52,23 +54,89 @@ export function NetworkPanel({ open, onClose, requests, onClear }: NetworkPanelP
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const [selectedRequest, setSelectedRequest] = useState<NetworkRequest | null>(null);
-  const [expandedRequest, setExpandedRequest] = useState<string | false>(false);
+  const [expandedRequests, setExpandedRequests] = useState<Set<string>>(new Set());
   const [activeTabs, setActiveTabs] = useState<Record<string, number>>({});
+  const requestRefs = useRef<Record<string, HTMLDivElement>>({});
+  const prevRequestsLengthRef = useRef<number>(0);
+  const requestsContainerRef = useRef<HTMLDivElement>(null);
 
   const handleRequestClick = (request: NetworkRequest) => {
     setSelectedRequest(request);
-    setExpandedRequest(request.id);
+    setExpandedRequests((prev) => {
+      const newSet = new Set(prev);
+      newSet.add(request.id);
+      return newSet;
+    });
   };
 
   const handleAccordionChange = (requestId: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
-    setExpandedRequest(isExpanded ? requestId : false);
-    if (isExpanded) {
-      const request = requests.find((r) => r.id === requestId);
-      if (request) {
-        setSelectedRequest(request);
+    setExpandedRequests((prev) => {
+      const newSet = new Set(prev);
+      if (isExpanded) {
+        newSet.add(requestId);
+        const request = requests.find((r) => r.id === requestId);
+        if (request) {
+          setSelectedRequest(request);
+        }
+      } else {
+        newSet.delete(requestId);
       }
-    }
+      return newSet;
+    });
   };
+
+  const handleExpandAll = () => {
+    const allIds = new Set(requests.map((r) => r.id));
+    setExpandedRequests(allIds);
+  };
+
+  const handleCollapseAll = () => {
+    setExpandedRequests(new Set());
+  };
+
+  const handleClear = () => {
+    onClear();
+    setExpandedRequests(new Set());
+    prevRequestsLengthRef.current = 0;
+    requestRefs.current = {};
+  };
+
+  const allExpanded = requests.length > 0 && expandedRequests.size === requests.length;
+
+  // Auto-expand and scroll to newest request when it arrives (if panel is open)
+  useEffect(() => {
+    if (open && requests.length > 0) {
+      const currentLength = requests.length;
+      const previousLength = prevRequestsLengthRef.current;
+      
+      // Check if a new request was added (length increased)
+      if (currentLength > previousLength) {
+        const newestRequest = requests[0]; // Newest request is at index 0
+        
+        if (newestRequest) {
+          // Auto-expand the newest request
+          setExpandedRequests((prev) => {
+            const newSet = new Set(prev);
+            newSet.add(newestRequest.id);
+            return newSet;
+          });
+          
+          // Scroll to the top of the requests container to show the newest request
+          setTimeout(() => {
+            if (requestsContainerRef.current) {
+              requestsContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          }, 100);
+        }
+      }
+      
+      // Update the previous length
+      prevRequestsLengthRef.current = currentLength;
+    } else if (!open) {
+      // Reset when panel is closed
+      prevRequestsLengthRef.current = 0;
+    }
+  }, [open, requests]);
 
   const getStatusColor = (status?: number) => {
     if (!status) return isDark ? '#ff5555' : 'error.main';
@@ -145,20 +213,36 @@ export function NetworkPanel({ open, onClose, requests, onClear }: NetworkPanelP
           </Box>
           <Box display="flex" gap={1}>
             {requests.length > 0 && (
-              <Tooltip title="Clear all requests">
-                <IconButton
-                  size="small"
-                  onClick={onClear}
-                  sx={{
-                    color: isDark ? '#ff5555' : 'error.main',
-                    '&:hover': {
-                      bgcolor: isDark ? 'rgba(255, 85, 85, 0.1)' : 'rgba(255, 0, 0, 0.05)',
-                    },
-                  }}
-                >
-                  <DeleteOutlineIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
+              <>
+                <Tooltip title={allExpanded ? "Collapse all" : "Expand all"}>
+                  <IconButton
+                    size="small"
+                    onClick={allExpanded ? handleCollapseAll : handleExpandAll}
+                    sx={{
+                      color: isDark ? '#8be9fd' : 'text.secondary',
+                      '&:hover': {
+                        bgcolor: isDark ? 'rgba(139, 233, 253, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                      },
+                    }}
+                  >
+                    {allExpanded ? <UnfoldLessIcon fontSize="small" /> : <UnfoldMoreIcon fontSize="small" />}
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Clear all requests">
+                  <IconButton
+                    size="small"
+                    onClick={handleClear}
+                    sx={{
+                      color: isDark ? '#ff5555' : 'error.main',
+                      '&:hover': {
+                        bgcolor: isDark ? 'rgba(255, 85, 85, 0.1)' : 'rgba(255, 0, 0, 0.05)',
+                      },
+                    }}
+                  >
+                    <DeleteOutlineIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </>
             )}
             <IconButton
               size="small"
@@ -173,7 +257,10 @@ export function NetworkPanel({ open, onClose, requests, onClear }: NetworkPanelP
         </Box>
 
         {/* Requests List */}
-        <Box sx={{ flex: 1, overflow: 'auto', bgcolor: isDark ? 'rgba(40, 42, 54, 0.3)' : 'rgba(0, 0, 0, 0.01)' }}>
+        <Box 
+          ref={requestsContainerRef}
+          sx={{ flex: 1, overflow: 'auto', bgcolor: isDark ? 'rgba(40, 42, 54, 0.3)' : 'rgba(0, 0, 0, 0.01)' }}
+        >
           {requests.length === 0 ? (
             <Box
               sx={{
@@ -203,9 +290,14 @@ export function NetworkPanel({ open, onClose, requests, onClear }: NetworkPanelP
             </Box>
           ) : (
             <Box sx={{ p: 1 }}>
-              {requests.map((request) => (
+              {requests.map((request, index) => (
                 <Paper
                   key={request.id}
+                  ref={(el) => {
+                    if (el) {
+                      requestRefs.current[request.id] = el;
+                    }
+                  }}
                   sx={{
                     mb: 1.5,
                     border: `1px solid ${theme.palette.divider}`,
@@ -215,7 +307,7 @@ export function NetworkPanel({ open, onClose, requests, onClear }: NetworkPanelP
                   }}
                 >
                   <Accordion
-                    expanded={expandedRequest === request.id}
+                    expanded={expandedRequests.has(request.id)}
                     onChange={handleAccordionChange(request.id)}
                     sx={{
                       borderRadius: 0,
@@ -239,6 +331,21 @@ export function NetworkPanel({ open, onClose, requests, onClear }: NetworkPanelP
                       }}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1, minWidth: 0 }}>
+                        <Chip
+                          label={`#${requests.length - index}`}
+                          size="small"
+                          sx={{
+                            borderRadius: 0,
+                            minWidth: 35,
+                            height: 22,
+                            bgcolor: isDark ? 'rgba(255, 184, 108, 0.2)' : 'rgba(0, 0, 0, 0.08)',
+                            color: isDark ? '#ffb86c' : 'text.primary',
+                            fontFamily: 'monospace',
+                            fontSize: '10px',
+                            fontWeight: 700,
+                            border: `1px solid ${isDark ? 'rgba(255, 184, 108, 0.3)' : theme.palette.divider}`,
+                          }}
+                        />
                         {getStatusIcon(request.responseStatus, request.error)}
                         <Chip
                           label={request.method}
